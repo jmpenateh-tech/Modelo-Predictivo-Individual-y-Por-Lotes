@@ -14,7 +14,7 @@ from sklearn.metrics import (
 import warnings
 warnings.filterwarnings('ignore')
 
-# ─── Page config ────────────────────────────────────────────────────────────
+# ─── Configuración de página ────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Heart Disease Predictor",
     page_icon="🫀",
@@ -22,7 +22,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ─── Custom CSS ─────────────────────────────────────────────────────────────
+# ─── CSS personalizado ─────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
     .main-header {
@@ -69,7 +69,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ─── Data loading & preprocessing ───────────────────────────────────────────
+# ─── Carga de datos y preprocesamiento ───────────────────────────────────────────
 COLS = ['age','sex','cp','trestbps','chol','fbs','restecg',
         'thalach','exang','oldpeak','slope','ca','thal','target']
 
@@ -105,7 +105,7 @@ COL_INFO = {
 
 @st.cache_resource(show_spinner=False)
 def load_and_train():
-    """Load all four datasets, combine, binarize target, train two models."""
+    """Cargar los cuatro datasets, combinar, binarizar objetivo, entrenar dos modelos."""
     dfs = []
     for name, fname in SOURCES.items():
         path = f"heart_data/{fname}"
@@ -115,10 +115,10 @@ def load_and_train():
 
     raw = pd.concat(dfs, ignore_index=True)
 
-    # Binarize: 0 = no disease, 1 = disease (values 1-4)
+    # Binarizar: 0 = sin enfermedad, 1 = con enfermedad (valores 1-4)
     raw['target'] = (raw['target'] > 0).astype(int)
 
-    # Impute missing values with median (per feature)
+    # Imputar valores faltantes con mediana (por característica)
     for col in FEATURE_COLS:
         if raw[col].isnull().any():
             raw[col] = raw[col].fillna(raw[col].median())
@@ -133,11 +133,11 @@ def load_and_train():
     X_train_s = scaler.fit_transform(X_train)
     X_test_s  = scaler.transform(X_test)
 
-    # Logistic Regression
+    # Regresión Logística
     lr = LogisticRegression(max_iter=2000, C=1.0)
     lr.fit(X_train_s, y_train)
 
-    # Neural Network (MLP)
+    # Red Neuronal (MLP)
     mlp = MLPClassifier(
         hidden_layer_sizes=(64, 32),
         activation='relu',
@@ -160,7 +160,7 @@ def load_and_train():
         'n_total': len(raw),
     }
 
-# ─── Metric helpers ──────────────────────────────────────────────────────────
+# ─── Ayudantes de métricas ──────────────────────────────────────────────────────────
 def compute_metrics(model, X, y_true):
     y_pred = model.predict(X)
     return {
@@ -192,7 +192,7 @@ def plot_cm(cm, title, cmap):
     return fig
 
 # ═══════════════════════════════════════════════════════════════════════════
-# MAIN
+# PRINCIPAL
 # ═══════════════════════════════════════════════════════════════════════════
 st.markdown('<div class="main-header">🫀 Heart Disease Predictor</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-header">Predicción de enfermedad cardíaca con Regresión Logística y Red Neuronal</div>', unsafe_allow_html=True)
@@ -200,7 +200,7 @@ st.markdown('<div class="sub-header">Predicción de enfermedad cardíaca con Reg
 with st.spinner("⚙️ Entrenando modelos con los 4 datasets combinados…"):
     state = load_and_train()
 
-# ── Sidebar summary ──────────────────────────────────────────────────────────
+# ── Resumen de la barra lateral ──────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("### 📊 Dataset")
     raw = state['raw']
@@ -226,7 +226,7 @@ with st.sidebar:
     st.markdown("- **Regresión Logística**\n- **Red Neuronal (MLP)**")
     st.markdown("*Los modelos se re-entrenan en cada carga de página.*")
 
-# ── Tabs ─────────────────────────────────────────────────────────────────────
+# ── Pestañas ─────────────────────────────────────────────────────────────────────
 tab1, tab2 = st.tabs(["🔍 Predicción Individual", "📂 Predicción por Lotes"])
 
 # ════════════════════════════════════════════════
@@ -325,7 +325,7 @@ with tab1:
             st.pyplot(fig_p, use_container_width=True)
             plt.close()
 
-        # Feature importance (LR only)
+        # Importancia de variables (solo LR)
         if model_choice == "Regresión Logística":
             st.markdown("---")
             st.markdown("**Importancia de variables (coeficientes del modelo)**")
@@ -354,7 +354,7 @@ with tab2:
         "Opcionalmente puede incluir **target** (0/1) para calcular métricas y matriz de confusión."
     )
 
-    # Download template
+    # Descargar plantilla
     template_df = pd.DataFrame(
         [[54, 1, 3, 130, 246, 0, 0, 150, 0, 1.0, 2, 0, 3]],
         columns=FEATURE_COLS
@@ -377,7 +377,7 @@ with tab2:
             if has_target:
                 user_df['target'] = (user_df['target'] > 0).astype(int)
 
-            # Check columns
+            # Verificar columnas
             missing_cols = [c for c in FEATURE_COLS if c not in user_df.columns]
             if missing_cols:
                 st.error(f"Columnas faltantes: {missing_cols}")
@@ -405,7 +405,7 @@ with tab2:
                 user_df['resultado'] = user_df['prediccion'].map(
                     {0: '✅ Sin enfermedad', 1: '❌ Con enfermedad'})
 
-                # Summary
+                # Resumen
                 n_pos = int(preds.sum())
                 n_neg = len(preds) - n_pos
                 k1, k2, k3 = st.columns(3)
@@ -413,13 +413,13 @@ with tab2:
                 k2.metric("Con enfermedad",  n_pos, delta=f"{n_pos/len(preds):.1%}")
                 k3.metric("Sin enfermedad",  n_neg, delta=f"{n_neg/len(preds):.1%}")
 
-                # Results table
+                # Tabla de resultados
                 st.markdown("**Resultados de predicción**")
                 display_cols = FEATURE_COLS + (['target'] if has_target else []) + \
                                ['prob_con_enfermedad', 'resultado']
                 st.dataframe(user_df[display_cols], use_container_width=True, height=300)
 
-                # Download
+                # Descargar
                 st.download_button(
                     "⬇️ Descargar resultados CSV",
                     user_df.to_csv(index=False),
@@ -427,7 +427,7 @@ with tab2:
                     mime="text/csv",
                 )
 
-                # Confusion matrix section (only if target present)
+                # Sección de matriz de confusión (solo si hay target)
                 if has_target:
                     st.markdown("---")
                     st.markdown('<div class="section-title">Métricas del conjunto cargado</div>',
@@ -473,7 +473,7 @@ with tab2:
         except Exception as e:
             st.error(f"Error procesando el archivo: {e}")
 
-    # ── Test set results (always shown) ──────────────────────────────────────
+    # ── Resultados en conjunto de prueba (siempre mostrados) ──────────────────────────────────────
     st.markdown("---")
     st.markdown('<div class="section-title">Resultados en datos de prueba internos</div>',
                 unsafe_allow_html=True)
@@ -512,7 +512,7 @@ with tab2:
                 st.pyplot(fig_pr, use_container_width=True)
                 plt.close()
 
-# ── Footer ───────────────────────────────────────────────────────────────────
+# ── Pie de página ───────────────────────────────────────────────────────────────────
 st.markdown("---")
 st.markdown(
     "<div style='text-align:center;color:#aaa;font-size:0.8rem;'>"
